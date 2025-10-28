@@ -1,0 +1,35 @@
+# core
+pandas==2.3.3
+scikit-learn==1.5.2
+xgboost==3.1.0
+lime==0.2.0.1
+numpy==2.3.4
+
+# visualization of impacts
+matplotlib==3.10.7
+seaborn==0.13.2
+
+# obtaining example data
+requests==2.32.5
+ucimlrepo==0.0.7
+openml==0.15.1
+
+# pipelines
+imbalanced-learn==0.14.0
+
+# notebooks
+jupyter==1.1.1
+jupyterlab==4.5.0b0
+notebook==7.5.0b0
+ipython==9.6.0
+ipywidgets==8.1.7
+
+# experiment runner
+PyYAML==6.0.3
+tqdm==4.67.1
+
+# speed up sklearn
+scikit-learn-intelex==2025.8.0
+
+# analyzer
+networkx==3.5
