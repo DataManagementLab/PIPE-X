@@ -6,7 +6,7 @@ import os
 import pickle
 import warnings
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Tuple
 
 from imblearn import FunctionSampler
 from imblearn.pipeline import Pipeline as IPipeline
@@ -88,115 +88,6 @@ class ImblearnPipelineWrapper(IPipeline, AbstractPipeline):
         pipeline = ImblearnPipelineWrapper(steps=steps)
         pipeline.essential_steps = ["categorical_encoder", "noop"]
         return pipeline
-
-
-class PandasPipeline(AbstractPipeline, BaseEstimator):
-    """A pipeline that works with pandas DataFrames and custom transformers.
-
-    This pipeline implementation is designed to work with both scikit-learn compatible
-    transformers and custom pandas-based transformers. It maintains the DataFrame
-    structure throughout the pipeline and provides additional functionality for
-    tracking transformations and generating snapshots.
-    """
-
-    def __init__(self, steps: List[Tuple[str, Union[TransformerMixin, PIPE_X.transformer.CustomTransformer]]]):
-        """Initialize the pipeline with a list of (name, transformer) tuples.
-
-        Args:
-            steps: List of (name, transformer) tuples. Transformers can be either
-                  scikit-learn compatible or custom pandas transformers.
-        """
-        self.steps = steps
-        self._fitted = False
-
-    def _repr_html_(self):
-        from IPython.display import display
-        temp_pipeline = Pipeline(steps=self.steps)
-        set_config(display='diagram')
-        display(temp_pipeline)
-
-    # noinspection PyPep8Naming
-    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> 'PandasPipeline':
-        """Fit all transformers in the pipeline.
-
-        Args:
-            X: Input DataFrame
-            y: Optional target Series
-
-        Returns:
-            self: The fitted pipeline
-        """
-        self._fitted = True
-        return self
-
-    # noinspection PyPep8Naming
-    def transform(self, X: pd.DataFrame, y: Optional[pd.Series] = None):
-        """Transform the data through all steps in the pipeline.
-
-        Args:
-            X: Input DataFrame
-            y: Optional target Series
-
-        Returns:
-            Transformed DataFrame
-        """
-        if not self._fitted:
-            raise ValueError("Pipeline must be fitted before transform")
-
-        x_transformed = X.copy()
-        y_transformed = y.copy() if y is not None else None
-
-        for name, transformer in self.steps:
-            if isinstance(transformer, PIPE_X.transformer.CustomTransformer):
-                transformed_data = transformer.transform(x_transformed, y_transformed)
-                if isinstance(transformed_data, tuple):
-                    x_transformed, y_transformed = transformed_data
-                else:
-                    x_transformed = transformed_data
-            else:
-                x_transformed = transformer.transform(x_transformed)
-
-        # check if y and y transformed are same, then return only X_transformed
-        if y is None or y_transformed is None or y.equals(y_transformed):
-            return x_transformed
-        else:
-            return x_transformed, y_transformed
-
-    # noinspection PyPep8Naming
-    def fit_transform(self, X: pd.DataFrame, y: Optional[pd.Series] = None):
-        """Fit and transform the data in one step.
-
-        Args:
-            X: Input DataFrame
-            y: Optional target Series
-
-        Returns:
-            Transformed DataFrame
-        """
-        X_transformed = X.copy()
-        y_transformed = y.copy() if y is not None else None
-        for name, transformer in self.steps:
-            if isinstance(transformer, PIPE_X.transformer.CustomTransformer):
-                transformed_data = transformer.fit_transform(X_transformed, y_transformed)
-                if isinstance(transformed_data, tuple):
-                    X_transformed, y_transformed = transformed_data
-                else:
-                    X_transformed = transformed_data
-            else:
-                if y is not None:
-                    X_transformed = transformer.fit_transform(X_transformed, y_transformed)
-                else:
-                    X_transformed = transformer.fit_transform(X_transformed)
-
-        if y is None or y_transformed is None or y.equals(y_transformed):
-            return X_transformed
-        else:
-            return X_transformed, y_transformed
-
-    def make_pipeline(self, steps) -> 'PandasPipeline':
-        """ Create a new PandasPipeline with the given steps.
-        """
-        return PandasPipeline(steps=steps)
 
 
 def pickle_pipeline(pipeline: AbstractPipeline, path: str, filename: str) -> None:
@@ -563,7 +454,8 @@ class PipelineWrapper:
                 model = self.model.train_single(snapshot_train_features, snapshot_train_target)
 
                 if isinstance(pipeline, ImblearnPipelineWrapper):
-                    pipeline.set_params(noop='passthrough')  # Set noop step to passthrough to avoid issues during transform
+                    pipeline.set_params(
+                        noop='passthrough')  # Set noop step to passthrough to avoid issues during transform
                 transformed_data_test = pipeline.transform(self.data.get_raw().test_data.copy())
 
                 # handle case where transformed data is a tuple (features, target) in case of custom transformers
