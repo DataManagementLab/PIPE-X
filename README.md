@@ -42,7 +42,7 @@ These instructions assume you have git, Python3.12 and virtualenv installed on y
 1. Clone the repository and navigate to the project directory:
 
     ```bash
-    git clone git@github.com:DataManagementLab/XAI-for-Preprocessing.git && cd XAI-for-Preprocessing
+    git clone git@github.com:DataManagementLab/PIPE-X.git && cd PIPE-X
     ```
 
 2. Setup Python environment, either using the setup bash script or by manually performing the steps within.
